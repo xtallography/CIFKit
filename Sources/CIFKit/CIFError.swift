@@ -1,35 +1,42 @@
 //
-//  ReturnCodes.swift
+//  CIFError.swift
 //
 
 import Foundation
 import CCIF
+import CCIF.Shims
 
 /// A Swift enumeration wrapping `cif_api`'s function return codes.
 /// These codes may be thrown as `Error`s, with the exception of `.ok` and
 /// the `.noSuch*` case family.
 ///
+/// - Note: Documentation as well as notes on individual cases are reproduced from the official CIF API documentation. The CIF API is distributed under the terms of the GNU Lesser General Public License.
 /// - SeeAlso: [Official `cif_api` Documentation](http://comcifs.github.io/cif_api/group__return__codes.html)
-public enum CIFAPIResultCode: Int32 {
+public enum CIFAPIReturnCode: Int32 {
     /// (`CIF_OK`) A result code indicating successful completion of the requested operation.
     case ok = 0
     
     /// (`CIF_FINISHED`) A result code indicating that the requested operation completed successfully, but subsequent repetitions of the same operation can be expected to fail.
+    /// - Note: This code is used mainly by packet iterators to signal the user when the last available packet is returned.
     case finished = 1
     
     /// (`CIF_ERROR`) A result code indicating that the requested operation failed because an error occurred in one of the underlying libraries.
+    /// - Note: This is CIF API's general-purpose error code for faults that it cannot more specifically diagnose. Pretty much any API function can return this code under some set of circumstances. Failed memory allocations or unexpected errors emitted by the storage back end are typical triggers for this code. In the event that this code is returned, the C library's global errno variable may indicate the nature of the error more specifically.
     case error = 2
     
     /// (`CIF_MEMORY_ERROR`) A result code indicating that the requested operation could not be performed because of a dynamic memory allocation failure.
     case memoryError = 3
     
     /// (`CIF_INVALID_HANDLE`) A result code returned on a best-effort basis to indicate that a user-provided object handle is invalid.
+    /// - Note: The CIF API does not guarantee to be able to recognize invalid handles. If an invalid handle is provided then a CIF_ERROR code may be returned instead, or really anything might happen -- generally speaking, library behavior is undefined in these cases. Where it does detect invalidity, that result may be context dependent. That is, the handle may be invalid for the use for which it presented, but valid for different uses. In particular, this may be the case if a save frame handle is presented to one of the functions that requires specifically a data block handle.
     case invalidHandle = 4
     
     /// (`CIF_INTERNAL_ERROR`) A result code indicating that an internal error or inconsistency was encountered.
+    /// - Note: If this code is emitted then it means a bug in the library has been triggered (if for no other reason than that this is the wrong code to return if an internal bug has not been triggered).
     case internalError = 5
     
     /// (`CIF_ARGUMENT_ERROR`) A result code indicating that an internal error or inconsistency was encountered.
+    /// - Note: This is a fallback code -- a more specific code will be emitted when one is available.
     case argumentError = 6
     
     /// (`CIF_MISUSE`) A result code indicating that although the function was called with with substantially valid arguments, the context or conditions do not allow the call.
@@ -39,6 +46,7 @@ public enum CIFAPIResultCode: Int32 {
     case notSupported = 8
     
     /// (`CIF_ENVIRONMENT_ERROR`) A result code indicating that the operating environment is missing data or features required to complete the operation.
+    /// - Note: For example, the `cif_create()` function of an SQLite-based implementation that depends on foreign keys might emit this code if it determines that the external sqlite library against which it is running omits foreign key support.
     case environmentError = 9
     
     /// (`CIF_CLIENT_ERROR`) A result code indicating a synthetic error injected by client code via a callback function.
@@ -66,6 +74,7 @@ public enum CIFAPIResultCode: Int32 {
     case categoryNotUnique = 31
     
     /// (`CIF_INVALID_CATEGORY`) A result code signaling an attempt to retrieve a loop from a save frame or data block by category, when the requested category is invalid.
+    /// - Note: The main invalid category is NULL (as opposed to the empty category name), which is invalid only for retrieval, not loop creation.
     case invalidCategory = 32
     
     /// (`CIF_NOSUCH_LOOP`) A result code signaling an attempt to retrieve a loop from a save frame or data block by category, when the container does not contain any loop tagged with the specified category.
@@ -84,9 +93,11 @@ public enum CIFAPIResultCode: Int32 {
     case nullLoop = 37
     
     /// (`CIF_DUP_ITEMNAME`) A result code indicating that an attempt was made to add an item to a data block or save frame that already contains an item of the same data name.
+    /// - Note: "Same" in this sense is judged with the use of Unicode normalization and case folding.
     case duplicateItemName = 41
     
     /// (`CIF_INVALID_ITEMNAME`) A result code indicating that an attempt was made to add an item with an invalid data name to a CIF.
+    /// - Note: Note that attempts to retrieve items by invalid name, on the other hand, simply return CIF_NOSUCH_ITEM
     case invalidItemName = 42
     
     /// (`CIF_NOSUCH_ITEM`) A result code indicating that an attempt to retrieve an item by name failed as a result of no item bearing that data name being present in the target container.
@@ -96,24 +107,29 @@ public enum CIFAPIResultCode: Int32 {
     case ambiguousItem = 44
     
     /// (`CIF_INVALID_PACKET`) A result code indicating that the requested operation could not be performed because a packet object provided by the user was invalid.
+    /// - Note: For example, the packet might have been empty in a context where that is not allowed.
     case invalidPacket = 52
     
     /// (`CIF_PARTIAL_PACKET`) A result code indicating that during parsing, the last packet in a loop construct contained fewer values than the associated loop header had data names.
     case partialPacket = 53
     
     /// (`CIF_DISALLOWED_VALUE`) A result code indicating that an attempt was made to parse or write a value in a context that allows only values of kinds different from the given value's.
+    /// - Note: The only context in CIF 2.0 that allows values of some kinds but not others is table indices. For this purpose, "allowed" is defined in terms of CIF syntax, ignoring any other considerations such as validity with respect to a data dictionary.
     case disallowedValue = 62
     
     /// (`CIF_INVALID_NUMBER`) A result code indicating that a string provided by the user could not be parsed as a number.
+    /// - Note: "Number" here should be interpreted in the CIF sense: an optionally-signed integer or floating-point number in decimal format, with optional signed exponent and optional standard uncertainty.
     case invalidNumber = 72
     
     /// (`CIF_INVALID_INDEX`) A result code indicating that a (Unicode) string provided by the user as a table index is not valid for that use.
     case invalidIndex = 73
     
     /// (`CIF_INVALID_BARE_VALUE`) A result code indicating that a bare value encountered while parsing CIF starts with a character that is not allowed for that purpose.
+    /// Note: This error is recognized where the start character does not cause the "value" to be interpreted as something else altogether, such as a data name or a comment. In CIF 2.0 parsing mode, only the dollar sign (as the first character of something that could be a value) will trigger this error; in CIF 1.1 mode, the opening and closing square brackets will also trigger it.
     case invalidBareValue = 74
     
     /// (`CIF_INVALID_CHAR`) A result code indicating that an invalid code sequence has been detected during I/O: a source character representation is not a valid code sequence in the encoding with which it is being interpreted.
+    /// - Note: This includes those code sequences ICU describes as "illegal" as well as those it describes as "irregular".
     case invalidChar = 102
     
     /// (`CIF_UNMAPPED_CHAR`) A result code indicating that I/O fidelity cannot be maintained on account of there being no representation for a source character in the target form.
@@ -123,6 +139,7 @@ public enum CIFAPIResultCode: Int32 {
     case disallowedChar        = 104
     
     /// (`CIF_MISSING_SPACE`) A result code indicating that required whitespace was missing during CIF parsing.
+    /// - Note: Recovery generally involves assuming the missing whitespace, which is fine as long as the reason for the error is not some previous, unobserved error such as an omitted opening table delimiter.
     case missingSpace          = 105
     
     /// (`CIF_MISSING_ENDQUOTE`) A result code indicating that an in-line quoted string started on the current line but was not closed before the end of the line.
@@ -135,6 +152,7 @@ public enum CIFAPIResultCode: Int32 {
     case overlengthLine = 108
     
     /// (`CIF_DISALLOWED_INITIAL_CHAR`) A result code indicating that a well-formed code sequence encountered at the beginning of CIF I/O decodes to a character that is not allowed to appear as the initial character of a CIF.
+    /// - Note: At the point where this error is encountered, it may not yet be known which version of CIF is being parsed. The normal recovery path is to leave the character alone, likely allowing it to trigger a different, more specific error later.
     case disallowedInitialChar = 109
     
     /// (`CIF_WRONG_ENCODING`) A result code indicating that input is being parsed according to CIF-2 syntax, but being decoded according to a different encoding form than UTF-8.
@@ -153,6 +171,7 @@ public enum CIFAPIResultCode: Int32 {
     case unexpectedTerm = 124
     
     /// (`CIF_EOF_IN_FRAME`) A result code indicating that during CIF parsing, the end of input was encountered while parsing a save frame.
+    /// - Note: This can indicate that the input was truncated or that the frame terminator was omitted.
     case eofInFrame = 126
     
     /// (`CIF_RESERVED_WORD`) A result code indicating that an unquoted reserved word was encountered during CIF parsing.
@@ -168,15 +187,18 @@ public enum CIFAPIResultCode: Int32 {
     case unexpectedDelimiter = 135
     
     /// (`CIF_MISSING_DELIM`) A result code indicating that during CIF parsing, a putative list or table value was encountered without a closing delimiter.
+    /// - Note: Alternatively, it is also conceivable that the previously-parsed opening delimiter was meant to be part of a value, but was not so interpreted on account of the value being unquoted.
     case missingDelimiter = 136
     
     /// (`CIF_MISSING_KEY`) A result code indicating that during parsing of a table value, an entry with no key was encountered.
+    /// - Note: Note that "no key" is different from "zero-length key" or "blank key"; the latter two are permitted.
     case missingKey = 137
     
     /// (`CIF_UNQUOTED_KEY`) A result code indicating that during parsing of a table value, an unquoted key was encountered.
     case unquotedKey = 138
     
     /// (`CIF_MISQUOTED_KEY`) A result code indicating that during parsing of a table value, text block was encountered as a table key.
+    /// - Note: The parser can handle that case just fine, but it is not allowed by the CIF 2.0 specifications.
     case misquotedKey = 139
     
     /// (`CIF_NULL_KEY`) A result code indicating that during parsing of a table value, colon-delimited key/value "pair" was encountered with no key at all (just colon, value).
@@ -185,9 +207,15 @@ public enum CIFAPIResultCode: Int32 {
     static var maxRawValue: Int = Int(cif_nerr)
 }
 
-extension CIFAPIResultCode: Error {
+extension CIFAPIReturnCode: Error {
     public var localizedDescription: String {
         return String(cString: cif_error_description(Int32(rawValue)))
+    }
+}
+
+extension Int32 {
+    var retCode: CIFAPIReturnCode {
+        return CIFAPIReturnCode(rawValue: self) ?? .error
     }
 }
 
