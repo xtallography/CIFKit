@@ -11,7 +11,8 @@ let package = Package(
             targets: ["CIFKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/xtallography/Swift-CCIF", .upToNextMajor(from: "0.4.2"))
+        .package(url: "https://github.com/xtallography/Swift-CCIF", .upToNextMajor(from: "0.4.2")),
+        .package(url: "https://github.com/typelift/SwiftCheck.git", from: "0.8.1")
     ],
     targets: [
         .target(
@@ -19,6 +20,6 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "CIFKitTests",
-            dependencies: ["CIFKit"]),
+            dependencies: ["CIFKit", "SwiftCheck"]),
     ]
 )
