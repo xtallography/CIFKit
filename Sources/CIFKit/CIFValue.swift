@@ -102,7 +102,6 @@ public extension CIFValueProtocol {
         return try? rawValue.getText()
     }
     
-    
     /// The number of elements in an aggregate value, or nil if this is not an aggregate value.
     public var count: Int? {
         return try? rawValue.getElementCount()
@@ -148,6 +147,25 @@ public struct CIFValueReference: CIFValueProtocol {
     }
 }
 
+extension CIFValueReference: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        switch kind {
+        case .string:
+            return "CIFValueReference(\"\(self.text!)\")"
+        case .number:
+            return "CIFValueReference(\(self.number!))"
+        case .list:
+            return "CIFValueReference([\(self.list!)])"
+        case .table:
+            return "CIFValueReference({\(self.table!)})"
+        case .notApplicable:
+            return "CIFValueReference(.)"
+        case .unknown:
+            return "CIFValueReference(?)"
+        }
+    }
+}
+
 // MARK: - Independent CIF Value Objects
 
 /// An independent CIF value, that is not a part of any aggregate value or
@@ -171,6 +189,11 @@ public class CIFValueObject: CIFValueProtocol {
         try self.rawValue.reinitialize(text)
     }
     
+    public convenience init(_ value: Double, uncertainty: Double = 0.0, scale: Int, maxLeadingZeroes: Int) throws {
+        self.init(.number)
+        try self.rawValue.reinitialize(value, uncertainty: uncertainty, scale: scale, maxLeadingZeroes: maxLeadingZeroes)
+    }
+    
     public convenience init(_ value: Double, uncertainty: Double = 0.0, roundingRule: Int = 19) throws {
         self.init(.number)
         try self.rawValue.reinitialize(value, uncertainty: uncertainty, roundingRule: roundingRule)
@@ -192,5 +215,24 @@ public class CIFValueObject: CIFValueProtocol {
     
     deinit {
         rawValue.free()
+    }
+}
+
+extension CIFValueObject: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        switch kind {
+        case .string:
+            return "CIFValueObject(\"\(self.text!)\")"
+        case .number:
+            return "CIFValueObject(\(self.number!))"
+        case .list:
+            return "CIFValueObject([\(self.list!)])"
+        case .table:
+            return "CIFValueObject({\(self.table!)})"
+        case .notApplicable:
+            return "CIFValueObject(.)"
+        case .unknown:
+            return "CIFValueObject(?)"
+        }
     }
 }
