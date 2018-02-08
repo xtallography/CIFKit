@@ -16,9 +16,8 @@ extension CIFPacketProtocol {
         return try! cPtr.getNames()
     }
     
-    public func get(_ name: String) throws -> CIFValueReference {
-        let ptr = try cPtr.get(name)!
-        return CIFValueReference(ptr)
+    public func get(_ name: String) throws -> CIFValueReference? {
+        return CIFValueReference(try cPtr.get(name))
     }
     
     public func set(_ name: String, _ value: CIFValueProtocol) throws {
@@ -43,6 +42,10 @@ public class CIFPacketObject: CIFPacketProtocol {
 
     public init(names: [String]) throws {
         _cPtr = try CCIFPacketPointer.create(names)
+    }
+    
+    internal init(_ cPtr: CCIFPacketPointer) {
+        _cPtr = cPtr
     }
     
     deinit {

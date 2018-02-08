@@ -7,6 +7,8 @@ public struct CCIFPacketPointer: RawRepresentable {
 
     public var rawValue: RawValue
 
+    // MARK: - Lifecycle
+    
     public init?(rawValue: RawValue) {
         self.rawValue = rawValue
     }
@@ -36,6 +38,8 @@ public struct CCIFPacketPointer: RawRepresentable {
         cif_packet_free(rawValue)
     }
     
+    // MARK: - Map Functionality
+    
     func getNames() throws -> [String] {
         var ptr: UnsafeMutablePointer<UnsafePointer<UTF16.CodeUnit>?>?
         
@@ -43,10 +47,10 @@ public struct CCIFPacketPointer: RawRepresentable {
         guard case .ok = ret else {
             throw ret
         }
+        defer { Compat.free(ptr) }
         
         // Iterates an array of pointers until a NULL/nil terminator.
         let iter = (0...).lazy.map { ptr![$0] }.prefix { $0 != nil }
-        
         return iter.flatMap { String(decodingCString: $0!, as: UTF16.self) }
     }
     

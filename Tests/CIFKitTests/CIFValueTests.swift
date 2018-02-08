@@ -42,6 +42,8 @@ class CIFValueTests: XCTestCase {
     
     static var allTests = [
         ("testStrings", testStrings),
+        ("testNumbers", testNumbers),
+        ("testLists", testLists),
     ]
 }
 

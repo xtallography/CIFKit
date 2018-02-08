@@ -166,7 +166,10 @@ public struct CCIFValuePointer: RawRepresentable {
     func getItemKeys() throws -> [String] {
         var ptr: UnsafeMutablePointer<UnsafePointer<UTF16.CodeUnit>?>?
         let ret = cif_value_get_keys(rawValue, &ptr).retCode
-        guard case .ok = ret else { throw ret }
+        guard case .ok = ret else {
+            throw ret
+        }
+        defer { Compat.free(ptr) }
 
         // Iterates an array of pointers until a NULL/nil terminator.
         let iter = (0...).lazy.map { ptr![$0] }.prefix { $0 != nil }

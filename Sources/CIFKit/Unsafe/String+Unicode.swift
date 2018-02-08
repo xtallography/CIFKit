@@ -1,10 +1,3 @@
-//
-//  String+Unicode.swift
-//  CIFKitPackageDescription
-//
-//  Created by Dylan Lukes on 1/25/18.
-//
-
 import Foundation
 
 typealias UMP = UnsafeMutablePointer

@@ -15,7 +15,7 @@ class CIFPacketTests: XCTestCase {
         do {
             let packet = try CIFPacketObject(names: [])
             try packet.set("_lorem", try CIFValueObject("foo bar baz"))
-            XCTAssertEqual("foo bar baz", try packet.get("_lorem").text)
+            XCTAssertEqual("foo bar baz", try packet.get("_lorem")?.text)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -23,6 +23,7 @@ class CIFPacketTests: XCTestCase {
     
     static var allTests = [
         ("testPacketInitializer", testPacketInitializer),
+        ("testPacketSubscript", testPacketSubscript)
     ]
 }
 

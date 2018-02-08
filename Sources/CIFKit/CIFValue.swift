@@ -145,6 +145,13 @@ public struct CIFValueReference: CIFValueProtocol {
     internal init(_ cPtr: CCIFValuePointer) {
         _cPtr = cPtr
     }
+    
+    internal init?(_ cPtr: CCIFValuePointer?) {
+        guard let cPtr = cPtr else {
+            return nil
+        }
+        _cPtr = cPtr
+    }
 }
 
 extension CIFValueReference: CustomDebugStringConvertible {
