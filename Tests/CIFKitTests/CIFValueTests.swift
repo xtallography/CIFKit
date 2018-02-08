@@ -7,7 +7,7 @@ let ε = Double.ulpOfOne
 class CIFValueTests: XCTestCase {
     func testStrings() {
         property("string values behave") <- forAll { (str: ArbitraryStringCIFValue) in
-            return str.value.text != nil
+            return str.value.text != nil            
         }
     }
     
