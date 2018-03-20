@@ -9,7 +9,7 @@ public struct CCIFPacketPointer: RawRepresentable {
 
     // MARK: - Lifecycle
     
-    public init?(rawValue: RawValue) {
+    public init(rawValue: RawValue) {
         self.rawValue = rawValue
     }
 
@@ -51,7 +51,7 @@ public struct CCIFPacketPointer: RawRepresentable {
         
         // Iterates an array of pointers until a NULL/nil terminator.
         let iter = (0...).lazy.map { ptr![$0] }.prefix { $0 != nil }
-        return iter.flatMap { String(decodingCString: $0!, as: UTF16.self) }
+        return iter.compactMap { String(decodingCString: $0!, as: UTF16.self) }
     }
     
     func has(_ name: String) throws -> Bool {

@@ -1,10 +1,3 @@
-//
-//  CIFValue.swift
-//  CIFKit
-//
-//  Created by Dylan Lukes on 1/23/18.
-//
-
 import CCIF
 import Foundation
 
@@ -13,6 +6,24 @@ import Foundation
 /// The parent protocol for both concrete CIFValues, and un-owned CIFValueRefs.
 public protocol CIFValueProtocol {
     var cPtr: CCIFValuePointer { get }
+}
+
+
+/// This extension declares convenience factory methods to simplify
+/// common use cases. These are intended for use via the .method shorthand.
+/// e.g. .text("lorem ipsum")
+public extension CIFValueProtocol {
+    static func text(_ text: String) -> CIFValue {
+        return CIFValue(text)
+    }
+    
+    static func number(_ value: Double, uncertainty: Double = 0.0, scale: Int, maxLeadingZeroes: Int) -> CIFValue {
+        return CIFValue(value, uncertainty: uncertainty, scale: scale, maxLeadingZeroes: maxLeadingZeroes)
+    }
+    
+    static func number(_ value: Double, uncertainty: Double = 0.0, roundingRule: Int = 19) -> CIFValue {
+        return CIFValue(value, uncertainty: uncertainty, roundingRule: roundingRule)
+    }
 }
 
 public enum CIFValueKind: Int {
@@ -24,7 +35,7 @@ public enum CIFValueKind: Int {
     case unknown = 5
 
     internal var cValue: cif_kind_tp {
-        return cif_kind_tp(UInt32(rawValue))
+        return cif_kind_tp(CUnsignedInt(rawValue))
     }
 }
 
@@ -41,18 +52,18 @@ public extension CIFValueProtocol {
     }
 
     /// Creates an independent value object with identical contents.
-    public func clone() throws -> CIFValueObject {
-        return CIFValueObject(cPtr: try cPtr.clone())
+    public func clone() throws -> CIFValue {
+        return CIFValue(cPtr: try cPtr.clone())
     }
 
-    public func clone(onto target: CIFValueObject) throws {
+    public func clone(onto target: CIFValue) throws {
         try cPtr.clone(onto: target.cPtr)
     }
 
     // MARK: - (Re)initialization
 
     public func reinitialize(_ kind: CIFValueKind) throws {
-        try cPtr.reinitialize(kind: cif_kind_tp(UInt32(kind.rawValue)))
+        try cPtr.reinitialize(kind: cif_kind_tp(CUnsignedInt(kind.rawValue)))
     }
 
     public func reinitialize(_ string: String) throws {
@@ -111,7 +122,7 @@ public extension CIFValueProtocol {
         guard case .list = kind, let count = count else { return nil }
 
         return (0 ..< count)
-            .flatMap { try? cPtr.get(at: $0) }
+            .compactMap { try? cPtr.get(at: $0) }
             .map(CIFValueReference.init)
     }
 
@@ -125,7 +136,7 @@ public extension CIFValueProtocol {
         guard case .table = kind, let keys = keys else { return nil }
 
         return [String: CIFValueReference](uniqueKeysWithValues: keys
-            .flatMap { try? ($0, cPtr.get(key: $0)) }
+            .compactMap { try? ($0, cPtr.get(key: $0)) }
             .map { ($0.0, CIFValueReference($0.1)) }
         )
     }
@@ -178,7 +189,10 @@ extension CIFValueReference: CustomDebugStringConvertible {
 /// An independent CIF value, that is not a part of any aggregate value or
 /// packet. Unlike most CIF objects (other than CIFPacket), CIFValue is not a
 /// handle, and owns its own resources.
-public class CIFValueObject: CIFValueProtocol {
+public class CIFValue: CIFValueProtocol, ExpressibleByStringLiteral, ExpressibleByFloatLiteral {
+    public typealias StringLiteralType = String
+    public typealias FloatLiteralType = Double
+    
     internal var _cPtr: CCIFValuePointer
     public var cPtr: CCIFValuePointer { return _cPtr }
 
@@ -187,29 +201,40 @@ public class CIFValueObject: CIFValueProtocol {
     }
 
     public init(_ kind: CIFValueKind) {
-        // This can fail due to allocation issues, we choose to fail hard.
+        // This only fails due to memory issues, we choose to fail hard.
         _cPtr = try! CCIFValuePointer.create(kind: kind.cValue)
     }
 
-    public convenience init(_ text: String) throws {
+    public convenience init(_ text: String) {
+        // This only fails due to memory issues, we choose to fail hard.
         self.init(.string)
-        try cPtr.reinitialize(text)
+        try! cPtr.reinitialize(text)
+    }
+    
+    public convenience required init(stringLiteral value: StringLiteralType) {
+        self.init(value)
     }
 
-    public convenience init(_ value: Double, uncertainty: Double = 0.0, scale: Int, maxLeadingZeroes: Int) throws {
+    public convenience init(_ value: Double, uncertainty: Double = 0.0, scale: Int, maxLeadingZeroes: Int) {
         self.init(.number)
-        try cPtr.reinitialize(value, uncertainty: uncertainty, scale: scale, maxLeadingZeroes: maxLeadingZeroes)
+        // This only fails due to memory issues, we choose to fail hard.
+        try! cPtr.reinitialize(value, uncertainty: uncertainty, scale: scale, maxLeadingZeroes: maxLeadingZeroes)
     }
 
-    public convenience init(_ value: Double, uncertainty: Double = 0.0, roundingRule: Int = 19) throws {
+    public convenience init(_ value: Double, uncertainty: Double = 0.0, roundingRule: Int = 19) {
         self.init(.number)
-        try cPtr.reinitialize(value, uncertainty: uncertainty, roundingRule: roundingRule)
+        // This only fails due to memory issues, we choose to fail hard.
+        try! cPtr.reinitialize(value, uncertainty: uncertainty, roundingRule: roundingRule)
     }
 
-    public convenience init<CIFValue: CIFValueProtocol>(_ list: [CIFValue]) throws {
+    public convenience required init(floatLiteral value: FloatLiteralType) {
+        self.init(value)
+    }
+
+    public convenience init<CIFValue: CIFValueProtocol>(_ list: [CIFValue]) {
         self.init(.list)
         for element in list.reversed() {
-            try cPtr.insert(at: 0, toCopyOf: element.cPtr)
+            try! cPtr.insert(at: 0, toCopyOf: element.cPtr)
         }
     }
 
@@ -225,7 +250,7 @@ public class CIFValueObject: CIFValueProtocol {
     }
 }
 
-extension CIFValueObject: CustomDebugStringConvertible {
+extension CIFValue: CustomDebugStringConvertible {
     public var debugDescription: String {
         switch kind {
         case .string:

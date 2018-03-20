@@ -20,12 +20,16 @@ extension String {
 
         return (buf, { buf in
             buf.baseAddress?.deinitialize(count: buf.count)
-            buf.baseAddress?.deallocate(capacity: buf.count)
+            buf.baseAddress?.deallocate()
         })
     }
 }
 
 extension Array where Element == String {
+    var utf16CStrings: Array<Array<UTF16.CodeUnit>> {
+        return self.map { $0.utf16CString }
+    }
+    
     var unmanagedUTF16CStrings: (UMBP<UMP<UInt16>?>, (UMBP<UMP<UInt16>?>) -> Void) {
         let ptr: UMP<UMP<UInt16>?> = .allocate(capacity: count + 1)
         let buf = UMBP(start: ptr, count: count + 1)
@@ -38,7 +42,7 @@ extension Array where Element == String {
         return (buf, { buf in
             elts.forEach({ (buf, dtor) in dtor(buf) })
             buf.baseAddress?.deinitialize(count: buf.count)
-            buf.baseAddress?.deallocate(capacity: buf.count)
+            buf.baseAddress?.deallocate()
         })
     }
 }

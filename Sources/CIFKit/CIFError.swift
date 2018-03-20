@@ -12,7 +12,12 @@ import Foundation
 ///
 /// - Note: Documentation as well as notes on individual cases are reproduced from the official CIF API documentation. The CIF API is distributed under the terms of the GNU Lesser General Public License.
 /// - SeeAlso: [Official `cif_api` Documentation](http://comcifs.github.io/cif_api/group__return__codes.html)
-public enum CIFAPIReturnCode: Int32 {
+public enum CIFAPIReturnCode: CInt {
+    static let continueTraversal =  0
+    case skipCurrent       = -1
+    case skipSiblings      = -2
+    case endTraversal      = -3
+    
     /// (`CIF_OK`) A result code indicating successful completion of the requested operation.
     case ok = 0
 
@@ -209,11 +214,11 @@ public enum CIFAPIReturnCode: Int32 {
 
 extension CIFAPIReturnCode: Error {
     public var localizedDescription: String {
-        return String(cString: cif_error_description(Int32(rawValue)))
+        return String(cString: cif_error_description(CInt(rawValue)))
     }
 }
 
-extension Int32 {
+extension CInt {
     var retCode: CIFAPIReturnCode {
         return CIFAPIReturnCode(rawValue: self) ?? .error
     }

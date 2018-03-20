@@ -1,14 +1,7 @@
-//
-//  CIFPacketIterator.swift
-//  CIFKitPackageDescription
-//
-//  Created by Dylan Lukes on 2/8/18.
-//
-
 import Foundation
 
 public class CIFPacketIterator: IteratorProtocol {
-    public typealias Element = CIFPacketObject
+    public typealias Element = CIFPacket
     
     var cPtr: CCIFPacketIteratorPointer
     
@@ -24,8 +17,8 @@ public class CIFPacketIterator: IteratorProtocol {
         try cPtr.abort()
     }
     
-    public func next() -> CIFPacketObject? {
-        return (try? cPtr.nextPacket())?.flatMap(CIFPacketObject.init)
+    public func next() -> CIFPacket? {
+        return (try? cPtr.nextPacket())?.flatMap(CIFPacket.init)
     }
     
     // TODO: update/remove aren't easily shoehorned into IteratorProtocol.

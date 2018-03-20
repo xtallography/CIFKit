@@ -8,7 +8,7 @@ public struct CCIFLoopPointer: RawRepresentable {
     
     // MARK: - Lifecycle
     
-    public init?(rawValue: RawValue) {
+    public init(rawValue: RawValue) {
         self.rawValue = rawValue
     }
     
@@ -67,7 +67,7 @@ public struct CCIFLoopPointer: RawRepresentable {
             Compat.free(ptr)
         }
         
-        return iter.flatMap { String(decodingCString: $0!, as: UTF16.self) }
+        return iter.compactMap { String(decodingCString: $0!, as: UTF16.self) }
     }
     
     func addItem(_ name: String, _ value: CCIFValuePointer) throws {

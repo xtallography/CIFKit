@@ -23,7 +23,7 @@ class CIFValueTests: XCTestCase {
         property("numeric values are preserved through text") <- forAll { (num: ArbitraryNumberCIFValue) in
             let (v1, su1) = (num.value.number!, num.value.uncertainty!)
             
-            let num2 = try! CIFValueObject(num.value.text!)
+            let num2 = CIFValue(num.value.text!)
             let (v2, su2) = (num2.number!, num2.uncertainty!)
             
             return abs(v1 - v2) < ε && abs(su1 - su2) < ε
@@ -32,11 +32,11 @@ class CIFValueTests: XCTestCase {
     
     func testLists() {
         property("lists of numbers behave") <- forAll { (list: [ArbitraryNumberCIFValue]) in
-            return try! CIFValueObject(list.map { $0.value }).count != nil
+            return CIFValue(list.map { $0.value }).count != nil
         }
         
         property("lists of strings behave") <- forAll { (list: [ArbitraryStringCIFValue]) in
-            return try! CIFValueObject(list.map { $0.value }).count != nil
+            return CIFValue(list.map { $0.value }).count != nil
         }
     }
     

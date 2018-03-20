@@ -20,19 +20,19 @@ extension Decimal: Arbitrary, RandomType {
 }
 
 struct ArbitraryStringCIFValue: Arbitrary {
-    let value: CIFValueObject
+    let value: CIFValue
     
     /// Rather than generate arbitrary strings, we use a set of "naughty" strings.
     static var arbitrary: Gen<ArbitraryStringCIFValue> {
         return Gen<String>
             .fromElements(of: naughtyStrings)
-            .map { try! CIFValueObject($0) }
+            .map { CIFValue($0) }
             .map { ArbitraryStringCIFValue(value: $0) }
     }
 }
 
 struct ArbitraryNumberCIFValue: Arbitrary {
-    let value: CIFValueObject
+    let value: CIFValue
 
     /// Arbitrarily generating numbers is somewhat more complex.
     static var arbitrary: Gen<ArbitraryNumberCIFValue> {
@@ -50,7 +50,7 @@ struct ArbitraryNumberCIFValue: Arbitrary {
             
             let su = c.generate(using: Gen<Decimal>.choose((0.0, suMax)))
 
-            return try! CIFValueObject(
+            return CIFValue(
                 Double(truncating: value as NSNumber),
                 uncertainty: Double(truncating: su as NSNumber),
                 roundingRule: 19)

@@ -3,10 +3,19 @@ import XCTest
 
 class CIFKitTests: XCTestCase {
     func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(CIFKit().text, "Hello, World!")
+        do {
+            let c = CIF()
+            try c.create(block: "_foo")
+            try c.with(block: "_foo") {
+                XCTAssert($0 != nil)
+            }
+            
+            try c.with(block: "_bar") {
+                XCTAssert($0 == nil)
+            }
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
     }
 
 

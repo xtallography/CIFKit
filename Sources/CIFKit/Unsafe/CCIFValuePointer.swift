@@ -12,7 +12,7 @@ public struct CCIFValuePointer: RawRepresentable {
 
     public var rawValue: RawValue
 
-    public init?(rawValue: RawValue) {
+    public init(rawValue: RawValue) {
         self.rawValue = rawValue
     }
 
@@ -72,12 +72,12 @@ public struct CCIFValuePointer: RawRepresentable {
 
     func reinitialize(_ value: Double, uncertainty: Double, scale: Int, maxLeadingZeroes: Int) throws {
 
-        let ret = cif_value_init_numb(rawValue, value, uncertainty, Int32(scale), Int32(maxLeadingZeroes)).retCode
+        let ret = cif_value_init_numb(rawValue, value, uncertainty, CInt(scale), CInt(maxLeadingZeroes)).retCode
         guard case .ok = ret else { throw ret }
     }
 
     func reinitialize(_ value: Double, uncertainty: Double, roundingRule: Int) throws {
-        let ret = cif_value_autoinit_numb(rawValue, value, uncertainty, UInt32(roundingRule)).retCode
+        let ret = cif_value_autoinit_numb(rawValue, value, uncertainty, CUnsignedInt(roundingRule)).retCode
         guard case .ok = ret else { throw ret }
     }
 
@@ -174,7 +174,7 @@ public struct CCIFValuePointer: RawRepresentable {
         // Iterates an array of pointers until a NULL/nil terminator.
         let iter = (0...).lazy.map { ptr![$0] }.prefix { $0 != nil }
 
-        return iter.flatMap { String(decodingCString: $0!, as: UTF16.self) }
+        return iter.compactMap { String(decodingCString: $0!, as: UTF16.self) }
     }
     
     func has(key: String) throws -> Bool {

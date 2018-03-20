@@ -2,21 +2,21 @@
   "object": {
     "pins": [
       {
-        "package": "CCIF",
-        "repositoryURL": "https://github.com/xtallography/Swift-CCIF",
-        "state": {
-          "branch": null,
-          "revision": "a63b178973ad78e35023fc3384743ca8fa38fb0d",
-          "version": "0.4.2"
-        }
-      },
-      {
         "package": "FileCheck",
         "repositoryURL": "https://github.com/trill-lang/FileCheck.git",
         "state": {
           "branch": null,
           "revision": "1c966580c83cf2e41be802992d46fe2edfc5c95f",
           "version": "0.0.5"
+        }
+      },
+      {
+        "package": "CCIF",
+        "repositoryURL": "https://github.com/xtallography/Swift-CCIF",
+        "state": {
+          "branch": null,
+          "revision": "72ddab74a2becc7e6f67dbf5312ac3c0119500ac",
+          "version": "0.4.2"
         }
       },
       {
